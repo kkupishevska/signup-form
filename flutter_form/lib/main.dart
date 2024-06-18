@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_form/consts/colors.dart';
+import 'package:flutter_form/widgets/custom_input.dart';
 import 'package:flutter_form/widgets/submit_button.dart';
 import 'package:flutter_form/helpers/validation.dart';
 
@@ -31,51 +31,46 @@ class SignUpForm extends StatefulWidget {
 }
 
 class SignUpFormState extends State<SignUpForm> {
-  final _passwordController = TextEditingController();
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
+
   final _formKey = GlobalKey<FormState>();
 
-  late String _email;
-  late String _password;
+  InputState _emailState = InputState.initial;
+  InputState _passwordState = InputState.initial;
 
-  bool _submitted = false;
-  bool _obscureText = true;
-
-  Color _uppercaseHintColor = CustomColors.primaryText;
-  Color _lengthHintColor = CustomColors.primaryText;
-  Color _digitHintColor = CustomColors.primaryText;
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+  }
 
   @override
   void dispose() {
     _passwordController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
   void submitForm() {
     setState(() {
-      _submitted = true;
+      _emailState = validateEmail(_emailController.text)
+          ? InputState.success
+          : InputState.error;
+      _passwordState = validatePassword(_passwordController.text)
+          ? InputState.success
+          : InputState.error;
     });
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      // Now you can use _email and _password for signup
-      print('Email: $_email, Password: $_password');
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Sign Up Successful'),
-      ));
-    }
-  }
 
-  void handlePasswordChange(String value) {
-    setState(() {
-      _lengthHintColor = value.length >= 8 && value.length < 64
-          ? CustomColors.success.withOpacity(0.7)
-          : CustomColors.primaryText;
-      _uppercaseHintColor = RegExp(r'[A-Z]').hasMatch(value)
-          ? CustomColors.success.withOpacity(0.7)
-          : CustomColors.primaryText;
-      _digitHintColor = RegExp(r'[0-9]').hasMatch(value)
-          ? CustomColors.success.withOpacity(0.7)
-          : CustomColors.primaryText;
-    });
+    if (_emailState == InputState.success &&
+        _passwordState == InputState.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sign Up successful'),
+        ),
+      );
+    }
   }
 
   @override
@@ -112,38 +107,59 @@ class SignUpFormState extends State<SignUpForm> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
-                        TextFormField(
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: _buildInputDecoration('Enter your email'),
-                          validator: validateEmail,
-                          onSaved: (value) => _email = value!,
+                        TextInputField.email(
+                          controller: _emailController,
+                          inputState: _emailState,
+                          onChanged: (_) =>
+                              setState(() => _emailState = InputState.initial),
                         ),
-                        const SizedBox(height: 20.0),
-                        TextFormField(
+                        const SizedBox(height: 15.0),
+                        TextInputField.password(
                           controller: _passwordController,
-                          obscureText: _obscureText,
-                          decoration: _buildPasswordInputDecoration(),
-                          onChanged: handlePasswordChange,
-                          validator: validatePassword,
-                          onSaved: (value) => _password = value!,
+                          inputState: _passwordState,
+                          onChanged: (_) => setState(
+                              () => _passwordState = InputState.initial),
                         ),
-                        const SizedBox(height: 8.0),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 20, top: 15),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildPasswordHintText(
-                                  '8 characters or more (no spaces)',
-                                  _lengthHintColor),
-                              _buildPasswordHintText(
-                                  'Uppercase and lowercase letters',
-                                  _uppercaseHintColor),
-                              _buildPasswordHintText(
-                                  'At least one digit', _digitHintColor),
-                            ],
+                        if (_passwordState == InputState.error)
+                          const Padding(
+                              padding: EdgeInsets.only(left: 20, top: 15),
+                              child: Text(
+                                'This password doesn\'t look right.\nPlease try again or reset it now.',
+                                style: TextStyle(
+                                  color: CustomColors.error,
+                                ),
+                              )),
+                        if (_passwordState != InputState.error)
+                          ValueListenableBuilder(
+                            valueListenable: _passwordController,
+                            builder: (context, value, _) => Align(
+                              alignment: Alignment.centerLeft,
+                              child: Padding(
+                                  padding:
+                                      const EdgeInsets.only(left: 20, top: 15),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _buildPasswordHintText(
+                                        '8 characters or more (no spaces)',
+                                        value.text.length >= 8 &&
+                                            !value.text.contains(' '),
+                                      ),
+                                      _buildPasswordHintText(
+                                        'Uppercase and lowercase letters',
+                                        value.text.contains(RegExp(r'[A-Z]')) &&
+                                            value.text
+                                                .contains(RegExp(r'[a-z]')),
+                                      ),
+                                      _buildPasswordHintText(
+                                        'At least one digit',
+                                        value.text.contains(RegExp(r'[0-9]')),
+                                      ),
+                                    ],
+                                  )),
+                            ),
                           ),
-                        ),
                         const SizedBox(height: 32.0),
                         SubmitButton(title: 'Sign up', onPressed: submitForm),
                       ],
@@ -158,66 +174,13 @@ class SignUpFormState extends State<SignUpForm> {
     );
   }
 
-  InputDecoration _buildInputDecoration(String hintText) {
-    return InputDecoration(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      errorStyle: const TextStyle(color: CustomColors.error, fontSize: 14),
-      focusedErrorBorder: _errorInputBorder(),
-      focusedBorder: _outlineInputBorder(),
-      enabledBorder: _outlineInputBorder(),
-      errorBorder: _errorInputBorder(),
-      fillColor: Colors.white,
-      hintText: hintText,
-      filled: true,
-    );
-  }
-
-  InputDecoration _buildPasswordInputDecoration() {
-    return InputDecoration(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      errorStyle: const TextStyle(color: CustomColors.error, fontSize: 14),
-      focusedErrorBorder: _errorInputBorder(),
-      enabledBorder: _outlineInputBorder(),
-      focusedBorder: _outlineInputBorder(),
-      errorBorder: _errorInputBorder(),
-      hintText: 'Create your password',
-      fillColor: Colors.white,
-      filled: true,
-      suffixIcon: IconButton(
-        icon: Icon(
-          _obscureText ? Icons.visibility : Icons.visibility_off,
-          color: CustomColors.greyBlue,
-        ),
-        onPressed: () {
-          setState(() {
-            _obscureText = !_obscureText;
-          });
-        },
-      ),
-    );
-  }
-
-  OutlineInputBorder _outlineInputBorder() {
-    return OutlineInputBorder(
-      borderSide: const BorderSide(color: Colors.transparent),
-      borderRadius: BorderRadius.circular(10.0),
-    );
-  }
-
-  OutlineInputBorder _errorInputBorder() {
-    return OutlineInputBorder(
-      borderSide: const BorderSide(color: CustomColors.error),
-      borderRadius: BorderRadius.circular(10.0),
-    );
-  }
-
-  Widget _buildPasswordHintText(String text, Color color) {
+  Widget _buildPasswordHintText(String text, bool isValid) {
     return Text(
       text,
       style: TextStyle(
-        color: _submitted
-            ? (color == CustomColors.primaryText ? CustomColors.error : color)
-            : color,
+        color: isValid
+            ? CustomColors.success.withOpacity(0.7)
+            : CustomColors.primaryText,
       ),
     );
   }
