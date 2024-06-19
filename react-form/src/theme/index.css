@@ -1,0 +1,115 @@
+@import './colours.css';
+
+html,
+body,
+#root {
+  font-family: 'Inter', sans-serif;
+  color: var(--primary-text);
+  height: 100%;
+}
+
+body {
+  background: var(--signin-container-bg);
+  margin: 0;
+}
+
+.wrapper {
+  background: url('../assets/stars.png') no-repeat;
+  background-position: center 14px;
+  max-width: 375px;
+  margin: 0 auto;
+  height: 100%;
+}
+
+.form {
+  padding: 94px 30px 30px;
+  flex-direction: column;
+  display: flex;
+  gap: 30px;
+}
+
+h1 {
+  text-align: center;
+}
+
+span {
+  line-height: 18px;
+  font-weight: 300;
+  font-size: 13px;
+  display: block;
+}
+
+.form-input {
+  color: var(--primary-text);
+  align-items: center;
+  border-radius: 10px;
+  position: relative;
+  font-weight: 400;
+  font-size: 16px;
+  display: flex;
+}
+
+.input {
+  border: 1px transparent solid;
+  color: var(--primary-text);
+  flex: 1;
+  border-radius: 10px;
+  font-weight: 400;
+  font-size: 16px;
+  padding: 15px;
+  padding-right: 30px;
+  &::placeholder {
+    color: var(--border);
+  }
+  &:focus {
+    outline: none;
+    border: 1px var(--border) solid;
+  }
+}
+
+.input-error {
+  border-color: var(--error);
+  &:focus {
+    border-color: var(--error);
+  }
+}
+
+.input-success {
+  border-color: var(--success);
+  &:focus {
+    border-color: var(--success);
+  }
+}
+
+.icon {
+  position: absolute;
+  height: 24px;
+  right: 10px;
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.container {
+  flex-direction: column;
+  row-gap: 15px;
+  display: flex;
+}
+
+button {
+  background: var(--submit-button-bg);
+  border-radius: 30px;
+  font-weight: 600;
+  color: white;
+  padding: 15px;
+  border: none;
+}
+
+.hint-green {
+  color: var(--success);
+  opacity: 0.7;
+}
+
+.password-hints {
+  padding-left: 15px;
+}
