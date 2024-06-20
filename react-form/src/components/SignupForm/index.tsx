@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import cs from 'classnames';
 
-import { HideIcon, ShowIcon } from '../icons';
+import Input from '../Input';
+
+import { useForm } from '../../hooks/useForm';
 
 import '../../theme/index.css';
 
@@ -10,111 +12,39 @@ enum PasswordHintsLabels {
   DIGIT = 'At least one digit',
 }
 
-export type PasswordErrors = {
-  length: boolean | null;
-  digit: boolean | null;
-  case: boolean | null;
-};
-
-type FormState = {
-  email: string;
-  password: string;
-};
-
 const SignUpForm = () => {
-  const [formState, setFormState] = useState<FormState>({
-    password: '',
-    email: '',
-  });
-  const [isFormSubmitted, setFormSubmitted] = useState(false);
-  const [emailValid, setEmailValid] = useState(false);
-  const [showText, setShowText] = useState(false);
-  const passwordValid = React.useMemo(
-    () => ({
-      case:
-        /[A-Z]/.test(formState.password) && /[a-z]/.test(formState.password),
-      length: formState.password.length >= 8 && formState.password.length <= 64,
-      digit: /[0-9]/.test(formState.password),
-    }),
-    [formState.password]
-  );
-
-  const handleInputChange = ({
-    target,
-  }: React.ChangeEvent<HTMLInputElement>) => {
-    setFormSubmitted(false);
-    const { value, name } = target;
-    setFormState((prevState) => ({ ...prevState, [name]: value }));
-    if (name === 'email') setEmailValid(validateEmail(value));
-  };
-
-  const validateEmail = (email: string) => {
-    return /\S+@\S+\.\S+/.test(email);
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setFormSubmitted(true);
-    if (
-      emailValid &&
-      passwordValid.length &&
-      passwordValid.case &&
-      passwordValid.digit
-    ) {
-      console.log('Form submitted');
-    } else {
-      console.log('Form validation failed');
-    }
-  };
+  const {formState, handleInputChange, isSubmitted, passwordValid, onSubmit} = useForm();
 
   return (
     <div className='wrapper'>
-      <form onSubmit={handleSubmit} className='form'>
+      <form onSubmit={onSubmit} className='form'>
         <div>
           <h1>Sign up</h1>
         </div>
         <div className='container'>
-          <div className='form-input'>
-            <input
-              className={`input ${
-                emailValid && isFormSubmitted && 'input-success'
-              } ${isFormSubmitted && 'input-error'}`}
-              onChange={handleInputChange}
-              placeholder='Enter email'
-              value={formState.email}
-              name="email"
-            />
-          </div>
-          <div className='form-input'>
-            <input
-              type={showText ? 'text' : 'password'}
-              onChange={handleInputChange}
-              value={formState.password}
-              className={`input ${
-                passwordValid.length &&
-                passwordValid.case &&
-                passwordValid.digit &&
-                isFormSubmitted &&
-                'input-success'
-              } ${isFormSubmitted && 'input-error'}`}
-              placeholder='Enter your password'
-              name="password"
-            />
-            <div
-              className='icon'
-              onClick={() => setShowText((prevState) => !prevState)}
-            >
-              {showText ? <HideIcon /> : <ShowIcon />}
-            </div>
-          </div>
+          <Input
+            inputState={formState.email.inputState}
+            value={formState.email.value}
+            onChange={handleInputChange}
+            placeholder='Enter email'
+            name='email'
+          />
+          <Input
+            inputState={formState.password.inputState}
+            value={formState.password.value}
+            placeholder='Enter your password'
+            onChange={handleInputChange}
+            name='password'
+            type="password"
+          />
           <div className='password-hints'>
-            <span className={passwordValid.length ? 'hint-green' : ''}>
+            <span className={cs({'hint-green': passwordValid.length, 'hint-red': !passwordValid.length && isSubmitted})}>
               {PasswordHintsLabels.LENGTH}
             </span>
-            <span className={passwordValid.case ? 'hint-green' : ''}>
+            <span className={cs({'hint-green': passwordValid.case, 'hint-red': !passwordValid.case && isSubmitted})}>
               {PasswordHintsLabels.CASE}
             </span>
-            <span className={passwordValid.digit ? 'hint-green' : ''}>
+            <span className={cs({'hint-green': passwordValid.digit, 'hint-red': !passwordValid.digit && isSubmitted})}>
               {PasswordHintsLabels.DIGIT}
             </span>
           </div>

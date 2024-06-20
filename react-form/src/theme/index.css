@@ -69,15 +69,23 @@ span {
 
 .input-error {
   border-color: var(--error);
+  color: var(--error);
   &:focus {
     border-color: var(--error);
+    color: var(--error);
+  }
+  &::placeholder {
+    color: var(--error);
+    opacity: 0.7;
   }
 }
 
 .input-success {
   border-color: var(--success);
+  color: var(--success);
   &:focus {
     border-color: var(--success);
+    color: var(--success);
   }
 }
 
@@ -108,6 +116,17 @@ button {
 .hint-green {
   color: var(--success);
   opacity: 0.7;
+}
+
+.hint-red {
+  color: var(--error);
+  opacity: 0.7;
+}
+
+.error-message {
+  margin-top: 10px;
+  margin-left: 15px;
+  color: var(--error);
 }
 
 .password-hints {
